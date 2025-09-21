@@ -52,6 +52,26 @@ export default function ResultsPanel() {
         </ol>
       </div>
 
+      {Array.isArray(results?.alternatives) && results.alternatives.length ? (
+        <div>
+          <h3 className="font-semibold">🔄 ALTERNATIVE PATHS</h3>
+          <ul className="list-disc ml-5 text-sm">
+            {results.alternatives.slice(0,3).map((path: any[], i: number) => (
+              <li key={i}>{path.map((step: any) => typeof step === "string" ? step : (step.node_description || step.node_id)).join(" → ")}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {Array.isArray((results as any).insights) && (results as any).insights.length ? (
+        <div>
+          <h3 className="font-semibold">💡 KEY INSIGHTS</h3>
+          <ul className="list-disc ml-5 text-sm">
+            {(results as any).insights.map((s: string, i: number) => (<li key={i}>{s}</li>))}
+          </ul>
+        </div>
+      ) : null}
+
       <div className="text-sm">
         <div>Success rate: {isNaN(successRatePct) ? "-" : `${successRatePct}%`}</div>
         <div>Confidence: {confidence}</div>

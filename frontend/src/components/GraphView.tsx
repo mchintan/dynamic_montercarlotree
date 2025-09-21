@@ -8,18 +8,25 @@ export default function GraphView() {
   const { tree, set } = useAppStore();
   const nodes: RFNode[] = useMemo(() => {
     if (!tree) return [];
-    return Object.values(tree.nodes).map((n: any, idx: number) => ({
-      id: n.id,
-      data: { label: n.text },
-      position: { x: (idx % 5) * 200, y: Math.floor(idx / 5) * 120 },
-    }));
+    return Object.values(tree.nodes).map((n: any, idx: number) => {
+      const visits = n.mcts?.visits ?? 0;
+      const avg = n.mcts?.avg_value ?? 0;
+      const rationale = n.metadata?.rationale || "";
+      const title = `${rationale ? `${rationale}\n` : ""}visits: ${visits}, avg: ${avg.toFixed ? avg.toFixed(2) : avg}`;
+      return {
+        id: n.id,
+        data: { label: (<div title={title}>{n.text}</div>) },
+        position: { x: (idx % 5) * 200, y: Math.floor(idx / 5) * 120 },
+      };
+    });
   }, [tree]);
   const edges: RFEdge[] = useMemo(() => {
     if (!tree) return [];
     const list: RFEdge[] = [];
     Object.values(tree.nodes).forEach((n: any) => {
-      n.branches.forEach((cid: string, i: number) => {
-        list.push({ id: `${n.id}-${cid}`, source: n.id, target: cid });
+      n.branches.forEach((cid: string) => {
+        const label = (tree.nodes[n.id]?.branch_meta && tree.nodes[n.id].branch_meta[cid]?.description) || "";
+        list.push({ id: `${n.id}-${cid}`, source: n.id, target: cid, label });
       });
     });
     return list;

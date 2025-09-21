@@ -1,13 +1,20 @@
 import { useAppStore } from "../store/useAppStore";
-import { simulate } from "../lib/api";
+import { API_URL, simulate } from "../lib/api";
 import { resolveTemplates } from "../lib/template";
 
 export default function SimulationPanel() {
-  const { tree, ui, stateConfig, decisions, simulationProgress, set } = useAppStore();
+  const { tree, ui, stateConfig, decisions, simulationProgress, qaResults, set } = useAppStore();
 
   const run = async () => {
     if (!tree) return;
     set({ simulationProgress: 0, results: null });
+    const qa = await fetch(`${API_URL}/simulate/${tree.id}/qa`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(tree),
+    }).then(r => r.json()).catch(() => null);
+    if (qa) set({ qaResults: qa });
+
     const payload = {
       tree,
       ui,
@@ -34,6 +41,16 @@ export default function SimulationPanel() {
   return (
     <div className="bg-white rounded border p-3 space-y-3">
       <h2 className="font-semibold">Simulation</h2>
+      {qaResults && qaResults.checks ? (
+        <div className="text-xs text-gray-700 space-y-1">
+          <div className="font-medium">Pre-simulation checks</div>
+          {qaResults.checks.map((c: any) => (
+            <div key={c.name} className={c.pass ? "text-green-700" : "text-red-700"}>
+              {c.pass ? "✔" : "✖"} {c.name} — {c.detail}
+            </div>
+          ))}
+        </div>
+      ) : null}
       <div className="flex items-center gap-2">
         <button className="btn" disabled={!tree} onClick={run}>Run</button>
         {simulationProgress > 0 && simulationProgress < 100 && (

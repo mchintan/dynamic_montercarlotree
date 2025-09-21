@@ -68,6 +68,15 @@ def simulate(tree_id: str, req: SimulationRequest):
         "num_nodes": len(tree.nodes),
         "root_visits": rv,
     }
+    try:
+        max_depth = max((node.depth for node in tree.nodes.values()), default=0)
+    except Exception:
+        max_depth = 0
+    stats["max_depth"] = max_depth
+    try:
+        stats["success_rate"] = float(tree.nodes[tree.root_id].mcts.avg_value) if tree.root_id in tree.nodes else 0.0
+    except Exception:
+        stats["success_rate"] = 0.0
     return SimulationResult(tree=tree, stats=stats, golden_path=golden, alternatives=[])
 
 @router.get("/tree/{tree_id}/export/json")
