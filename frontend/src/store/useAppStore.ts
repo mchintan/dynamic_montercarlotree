@@ -15,6 +15,8 @@ type AppState = {
   selectedNodeId: string | null;
   proposals: ProposedBranch[];
   results: any | null;
+  simulationProgress: number;
+  qaResults: any | null;
   set: (u: Partial<AppState>) => void;
 };
 
@@ -26,5 +28,7 @@ export const useAppStore = create<AppState>((set) => ({
   selectedNodeId: null,
   proposals: [],
   results: null,
+  simulationProgress: 0,
+  qaResults: null,
   set: (u) => set(u),
 }));

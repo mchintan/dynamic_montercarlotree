@@ -1,3 +1,4 @@
+import InitWizard from "./components/InitWizard";
 import ConfigPanel from "./components/ConfigPanel";
 import StateEditor from "./components/StateEditor";
 import DecisionsEditor from "./components/DecisionsEditor";
@@ -21,6 +22,7 @@ export default function App() {
     <div className="p-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
       <Classes />
       <div className="space-y-4">
+        <InitWizard />
         <ConfigPanel />
         <StateEditor />
         <DecisionsEditor />
