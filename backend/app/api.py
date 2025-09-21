@@ -100,7 +100,8 @@ def _mermaid(tree: Tree) -> str:
         n = tree.nodes[nid]
         lines.append(f'  {nid}["{n.text}"]')
         for cid in n.branches:
-            label = tree.nodes[nid].branch_meta.get(cid).description if tree.nodes[nid].branch_meta.get(cid) else ""
+            bmeta = tree.nodes[nid].branch_meta.get(cid) if hasattr(tree.nodes[nid], "branch_meta") else None
+            label = bmeta.description if bmeta else ""
             lines.append(f"  {nid} -->|{label}| {cid}")
             rec(cid)
     rec(tree.root_id)
