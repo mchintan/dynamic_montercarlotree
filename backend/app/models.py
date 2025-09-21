@@ -2,14 +2,23 @@ from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
 from uuid import uuid4
 
+class MCTSData(BaseModel):
+    visits: int = 0
+    total_reward: float = 0.0
+    avg_value: float = 0.0
+
+class Branch(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid4()))
+    description: str
+    rationale: Optional[str] = None
+
 class Node(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid4()))
     parent_id: Optional[str] = None
     text: str
     branches: List[str] = Field(default_factory=list)
-    visit_count: int = 0
-    total_reward: float = 0.0
-    average_value: float = 0.0
+    branch_meta: Dict[str, Branch] = Field(default_factory=dict)
+    mcts: MCTSData = Field(default_factory=MCTSData)
     is_terminal: bool = False
     depth: int = 0
     metadata: Dict[str, Any] = Field(default_factory=dict)
@@ -39,6 +48,10 @@ class Decision(BaseModel):
     title: str
     guard: Optional[str] = None
     effects: Dict[str, Any] = Field(default_factory=dict)
+class ProposedBranch(BaseModel):
+    description: str
+    rationale: Optional[str] = None
+
 
 class DecisionsConfig(BaseModel):
     decisions: List[Decision] = Field(default_factory=list)
@@ -48,7 +61,7 @@ class ProposeBranchesRequest(BaseModel):
     context: Optional[Dict[str, Any]] = None
 
 class ProposeBranchesResponse(BaseModel):
-    proposals: List[str]
+    proposals: List[ProposedBranch]
 
 class SimulationRequest(BaseModel):
     tree: Tree
@@ -60,8 +73,15 @@ class SimulationProgress(BaseModel):
     total: int
     completed: int
 
+class GoldenStep(BaseModel):
+    node_id: str
+    branch_taken: Optional[str] = None
+    node_description: str
+    reasoning: Optional[str] = None
+    success_probability: Optional[float] = None
+
 class SimulationResult(BaseModel):
     tree: Tree
     stats: Dict[str, Any]
-    golden_path: List[str]
-    alternatives: List[List[str]]
+    golden_path: List[GoldenStep] | List[str]
+    alternatives: List[List[GoldenStep]] | List[List[str]]

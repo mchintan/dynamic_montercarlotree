@@ -35,16 +35,18 @@ def propose(tree_id: str, req: ProposeBranchesRequest):
     from .services.branch_proposer import propose_branches_llm, build_prompt
     prompt = build_prompt(node.text, req.context)
     props = propose_branches_llm(prompt)
-    return ProposeBranchesResponse(proposals=props)
+    proposals = [ProposedBranch(**p) for p in props]
+    return ProposeBranchesResponse(proposals=proposals)
 
 @router.post("/tree/{tree_id}/apply-branches", response_model=Tree)
-def apply_branches(tree_id: str, node_id: str, branches: list[str] = Body(...)):
+def apply_branches(tree_id: str, node_id: str, branches: List[ProposedBranch] = Body(...)):
     tree = store.get_tree(tree_id)
     node = tree.nodes[node_id]
-    for txt in branches:
-        child = Node(parent_id=node.id, text=txt, depth=node.depth + 1, metadata={"rationale": None})
+    for pb in branches:
+        child = Node(parent_id=node.id, text=pb.description, depth=node.depth + 1, metadata={"rationale": pb.rationale})
         tree.nodes[child.id] = child
         node.branches.append(child.id)
+        node.branch_meta[child.id] = Branch(id=child.id, description=pb.description, rationale=pb.rationale)
     store.put_tree(tree)
     return tree
 
@@ -56,6 +58,6 @@ def simulate(tree_id: str, req: SimulationRequest):
     golden = compute_golden_path(tree, req.ui.golden_path_criterion)
     stats = {
         "num_nodes": len(tree.nodes),
-        "root_visits": tree.nodes[tree.root_id].visit_count,
+        "root_visits": getattr(tree.nodes[tree.root_id], "mcts", None).visits if hasattr(tree.nodes[tree.root_id], "mcts") else tree.nodes[tree.root_id].visit_count,
     }
     return SimulationResult(tree=tree, stats=stats, golden_path=golden, alternatives=[])
