@@ -85,4 +85,3 @@ class SimulationResult(BaseModel):
     stats: Dict[str, Any]
     golden_path: List[GoldenStep] | List[str]
     alternatives: List[List[GoldenStep]] | List[List[str]]
-    alternatives: List[List[GoldenStep]] | List[List[str]]
