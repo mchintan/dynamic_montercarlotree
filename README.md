@@ -75,9 +75,13 @@ API summary (backend/app/api.py)
 - GET  /api/tree/{tree_id}/export/mermaid -> text/plain
 
 Screenshots
-The repo includes screenshots taken during development. Paths used below will be uploaded with the repo.
-- ![Home](docs/images/localhost_5173_203025.png)
-- ![Simulation](docs/images/localhost_5173_203146.png)
+The repo includes updated v2.0 screenshots:
+- ![Init Wizard](docs/images/init_wizard.png)
+- ![AI Initialize](docs/images/ai_init.png)
+- ![Branch Validation](docs/images/branch_validation.png)
+- ![Graph with Labels/Tooltips](docs/images/graph_labels.png)
+- ![Simulation Progress + QA Checks](docs/images/sim_progress_qa.png)
+- ![Results v2 (Golden Path, Stats, Exports, Alternatives/Insights)](docs/images/results_v2.png)
 
 Customization and provider hooks
 - Branch proposals: backend/app/services/branch_proposer.py
