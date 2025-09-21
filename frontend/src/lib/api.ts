@@ -12,7 +12,7 @@ export async function proposeBranches(treeId: string, nodeId: string, context?: 
   });
   return res.json();
 }
-export async function applyBranches(treeId: string, nodeId: string, branches: string[]) {
+export async function applyBranches(treeId: string, nodeId: string, branches: any[]) {
   const res = await fetch(`${API_URL}/tree/${treeId}/apply-branches?node_id=${nodeId}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

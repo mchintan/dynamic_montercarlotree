@@ -1,16 +1,19 @@
 import { create } from "zustand";
 
 type UIParams = {
-  num_simulations: number; max_depth: number; time_budget_ms?: number;
-  exploration_c: number; random_seed?: number; golden_path_criterion: string;
+  num_simulations: number; max_depth: number; time_budget_ms?: number | null;
+  exploration_c: number; random_seed?: number | null; golden_path_criterion: string;
 };
+
+export type ProposedBranch = { description: string; rationale?: string | null };
+
 type AppState = {
   tree: any | null;
   ui: UIParams;
   stateConfig: any;
   decisions: any;
   selectedNodeId: string | null;
-  proposals: string[];
+  proposals: ProposedBranch[];
   results: any | null;
   set: (u: Partial<AppState>) => void;
 };

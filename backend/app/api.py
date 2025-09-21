@@ -56,8 +56,16 @@ def simulate(tree_id: str, req: SimulationRequest):
     store.put_tree(tree)
     run_simulations(tree, req.ui, req.state, req.decisions)
     golden = compute_golden_path(tree, req.ui.golden_path_criterion)
+    root = tree.nodes.get(tree.root_id)
+    rv = 0
+    if root:
+        m = getattr(root, "mcts", None)
+        if m is not None and hasattr(m, "visits"):
+            rv = m.visits
+        else:
+            rv = getattr(root, "visit_count", 0)
     stats = {
         "num_nodes": len(tree.nodes),
-        "root_visits": getattr(tree.nodes[tree.root_id], "mcts", None).visits if hasattr(tree.nodes[tree.root_id], "mcts") else tree.nodes[tree.root_id].visit_count,
+        "root_visits": rv,
     }
     return SimulationResult(tree=tree, stats=stats, golden_path=golden, alternatives=[])
