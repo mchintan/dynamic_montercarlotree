@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Body
+from fastapi import APIRouter, HTTPException, Body, Response
 from .models import *
 from .store.memory import store
 from .mcts.engine import run_simulations, compute_golden_path
@@ -69,3 +69,56 @@ def simulate(tree_id: str, req: SimulationRequest):
         "root_visits": rv,
     }
     return SimulationResult(tree=tree, stats=stats, golden_path=golden, alternatives=[])
+
+@router.get("/tree/{tree_id}/export/json")
+def export_json(tree_id: str):
+    tree = store.get_tree(tree_id)
+    return tree.dict()
+
+def _markdown_outline(tree: Tree) -> str:
+    lines = []
+    def rec(nid: str, prefix: str = ""):
+        n = tree.nodes[nid]
+        label = n.text
+        lines.append(f"{prefix}- {label}")
+        for cid in n.branches:
+            bmeta = tree.nodes[nid].branch_meta.get(cid) if hasattr(tree.nodes[nid], "branch_meta") else None
+            edge = f" ({bmeta.description})" if bmeta else ""
+            rec(cid, prefix + "  ")
+    rec(tree.root_id)
+    return "\n".join(lines)
+
+@router.get("/tree/{tree_id}/export/markdown")
+def export_markdown(tree_id: str):
+    tree = store.get_tree(tree_id)
+    md = _markdown_outline(tree)
+    return Response(content=md, media_type="text/markdown")
+
+def _mermaid(tree: Tree) -> str:
+    lines = ["graph TD"]
+    def rec(nid: str):
+        n = tree.nodes[nid]
+        lines.append(f'  {nid}["{n.text}"]')
+        for cid in n.branches:
+            label = tree.nodes[nid].branch_meta.get(cid).description if tree.nodes[nid].branch_meta.get(cid) else ""
+            lines.append(f"  {nid} -->|{label}| {cid}")
+            rec(cid)
+    rec(tree.root_id)
+    return "\n".join(lines)
+
+@router.get("/tree/{tree_id}/export/mermaid")
+def export_mermaid(tree_id: str):
+    tree = store.get_tree(tree_id)
+    mm = _mermaid(tree)
+    return Response(content=mm, media_type="text/plain")
+
+@router.post("/simulate/{tree_id}/qa")
+def qa_checks(tree_id: str, tree: Tree = Body(...)):
+    results = []
+    max_depth = max((n.depth for n in tree.nodes.values()), default=0)
+    results.append({"name": "sufficient_depth", "pass": max_depth >= 3, "detail": f"max_depth={max_depth}"})
+    has_terminal = any(n.is_terminal or not n.branches for n in tree.nodes.values())
+    results.append({"name": "terminal_nodes", "pass": has_terminal, "detail": "at least one terminal/leaf"})
+    ok_depths = all(tree.nodes[cid].depth == n.depth + 1 for n in tree.nodes.values() for cid in n.branches if cid in tree.nodes)
+    results.append({"name": "logical_consistency", "pass": ok_depths, "detail": "depths monotonic"})
+    return {"checks": results}
