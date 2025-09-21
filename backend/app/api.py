@@ -8,7 +8,7 @@ router = APIRouter(prefix="/api")
 
 @router.post("/tree/init", response_model=Tree)
 def init_tree(text: str):
-    root = Node(text=text)
+    root = Node(text=text, depth=0, metadata={"rationale": None})
     tree = Tree(root_id=root.id, nodes={root.id: root})
     store.put_tree(tree)
     return tree
@@ -16,7 +16,12 @@ def init_tree(text: str):
 @router.post("/tree/init/ai", response_model=Tree)
 def init_tree_ai(scenario: str = Body(..., embed=True)):
     payload = init_graph_ai(scenario)
-    nodes = {nid: Node(**ndata) for nid, ndata in payload["nodes"].items()}
+    nodes = {}
+    for nid, ndata in payload["nodes"].items():
+        base = dict(ndata)
+        base.setdefault("depth", 0 if nid == payload["root_id"] else 1)
+        base.setdefault("metadata", {"rationale": base.get("metadata", {}).get("rationale") if isinstance(base.get("metadata"), dict) else None})
+        nodes[nid] = Node(**base)
     tree = Tree(root_id=payload["root_id"], nodes=nodes)
     store.put_tree(tree)
     return tree
@@ -37,7 +42,7 @@ def apply_branches(tree_id: str, node_id: str, branches: list[str] = Body(...)):
     tree = store.get_tree(tree_id)
     node = tree.nodes[node_id]
     for txt in branches:
-        child = Node(parent_id=node.id, text=txt)
+        child = Node(parent_id=node.id, text=txt, depth=node.depth + 1, metadata={"rationale": None})
         tree.nodes[child.id] = child
         node.branches.append(child.id)
     store.put_tree(tree)

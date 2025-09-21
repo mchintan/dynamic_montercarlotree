@@ -11,6 +11,8 @@ class Node(BaseModel):
     total_reward: float = 0.0
     average_value: float = 0.0
     is_terminal: bool = False
+    depth: int = 0
+    metadata: Dict[str, Any] = Field(default_factory=dict)
 
 class Tree(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid4()))
