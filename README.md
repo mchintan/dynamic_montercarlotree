@@ -38,15 +38,16 @@ See frontend/.env.example
 
 Core flows
 
-1) Initialize a tree
-- Option A: Create Root — enter root text and click Create Root
-- Option B: AI Initialize — enter a scenario; backend returns a small graph seeded by AI initializer
+1) Phase 1 — Initialize
+- Wizard collects: starting_point, desired_goal, constraints, evaluation_criteria
+- Confirm understanding, then initialize a root node
+- Optionally use AI Initialize — enter a scenario; backend returns a small graph seeded by AI initializer
 
 2) Graph editing (React Flow)
 - Pan/zoom the canvas
 - Double-click a node to propose branches via AI
-- A validation modal appears where you can accept or modify proposed branches
-- Applied branches create new child nodes
+- Validation modal shows 2–5 options with { description, rationale }; edit before applying
+- Applied branches create new child nodes; edge labels reflect branch descriptions
 
 3) Configure MCTS
 - ConfigPanel: num_simulations, max_depth, exploration_c, etc.
@@ -55,17 +56,23 @@ Core flows
 
 4) Run simulation
 - Click Run in Simulation panel
+- Progress updates display at ~25/50/75/100%
 - Results panel shows:
-  - Nodes count
-  - Root visits
-  - Golden path (best sequence by criterion)
+  - Nodes count, depth, and total simulations
+  - Golden path (numbered), with optional probabilities
+  - Confidence band (High/Medium/Low)
+  - Export buttons (Markdown/JSON/Mermaid)
 
 API summary (backend/app/api.py)
 - POST /api/tree/init?text=... -> Tree
 - POST /api/tree/init/ai { scenario } -> Tree
-- POST /api/tree/{tree_id}/propose { node_id, context? } -> { proposals: string[] }
-- POST /api/tree/{tree_id}/apply-branches?node_id=... [ "branch text", ... ] -> Tree
+- POST /api/tree/{tree_id}/propose { node_id, context? } -> { proposals: { description, rationale? }[] }
+- POST /api/tree/{tree_id}/apply-branches?node_id=...  body: { description, rationale? }[] -> Tree
 - POST /api/simulate/{tree_id} { tree, ui, state, decisions } -> { tree, stats, golden_path, alternatives }
+- POST /api/simulate/{tree_id}/qa  body: Tree -> { checks: [{ name, pass, detail }] }
+- GET  /api/tree/{tree_id}/export/json -> JSON
+- GET  /api/tree/{tree_id}/export/markdown -> text/markdown
+- GET  /api/tree/{tree_id}/export/mermaid -> text/plain
 
 Screenshots
 The repo includes screenshots taken during development. Paths used below will be uploaded with the repo.
